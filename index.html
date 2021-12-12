@@ -193,6 +193,9 @@
             delete playerList[snapshot.key()];
 
             $('#player_'+snapshot.key()).remove();
+            if(Object.keys(playerList).length===0){
+                roomDataFirebase.remove()
+            }
         }
 
         var playerJoinRoom = function () {
@@ -227,6 +230,8 @@
         countDownTimer();
         $(".correct-player").removeClass("correct-player");
         correctPlayerList = [];
+
+        checkIfHetRound();
     }
     function onNextWord(params) {
         nextWord();
@@ -266,7 +271,7 @@
         const randomWordIndex = Math.floor(Math.random() * listWord.length);
         let word = listWord[randomWordIndex];
         word = shuffle(word);
-        word = word.split('').join('/');
+        word = word.split(' ').join('_').split('').join('/');
         //$('#questionHolder').text(word);
 
         currentWord = word;
@@ -275,10 +280,20 @@
             currentWord: word,
             currentRound,
             currentCorrectWord: listWord[randomWordIndex],
-        }))
+        }));
+        checkIfHetRound();
+        
+    }
+
+    function checkIfHetRound(){
         if (roundMax <= currentRound) {
             $('#btnNextWord').prop("disabled", true);
-            $('#btnNextWord').text("Hết round!")
+            $('#btnNextWord').text("Hết round!");
+            $('#txtTextAnswer').prop("disabled");
+            clearInterval(x);
+            document.getElementById("countdown").innerHTML = "EXPIRED";
+            $("#txtTextAnswer").prop("disabled", true)
+            $("#questionHolder").text(currentCorrectWord);
         }
     }
 
@@ -321,11 +336,12 @@
 
     var countDownDate;
     var now;
+    var x;
     function countDownTimer() {
         countDownDate = new Date().getTime() + (countDownMax * 1000);
         console.log(countDownMax * 1000)
         $("#txtTextAnswer").prop("disabled", false)
-        var x = setInterval(function () {
+        x = setInterval(function () {
 
             // Get today's date and time
             now = new Date().getTime();
