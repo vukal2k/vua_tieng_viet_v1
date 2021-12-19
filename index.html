@@ -127,6 +127,7 @@
     var roomDataFirebase;
     var roomChatFirebase = new Firebase('https://vuatiengviet3-default-rtdb.firebaseio.com/chat/');
     var wordsFirebase = new Firebase('https://vuatiengviet3-default-rtdb.firebaseio.com/words/');
+
     roomChatFirebase.on('child_added', function (snapshot) {
         var chat = snapshot.val();
         var html =
@@ -179,7 +180,7 @@
                     correctClass = 'class = "correct-player"';
                 }
 
-                html += `<li id="player_${player[0]}"><h3 style="padding:10%;border-radius: 10px;" ${correctClass}>${player[0]}: ${player[1]} <span class="status"></span></h3></li>`;
+                html += `<li id="player_${player[0]}"><h3 style="padding:10%;border-radius: 10px;" ${correctClass}>${player[0]}: ${Math.round(+player[1])} <span class="status"></span></h3></li>`;
             }
             $("#listPlayer").html(html)
         }
@@ -231,6 +232,8 @@
         countDownTimer();
         $(".correct-player").removeClass("correct-player");
         correctPlayerList = [];
+        localStorage.removeItem('correctAnswered_'+thisRoomId);
+        $("#txtTextAnswer").focus();
 
         checkIfHetRound();
     }
@@ -246,11 +249,14 @@
             $("#txtRoomIdError").text("")
         }
         var roomId = +$("#txtRoomId").val();
-        var playerName = prompt("Your name: ");
+        let oldPlayerName = localStorage.getItem("oldPlayerName")
+        oldPlayerName = !oldPlayerName || oldPlayerName==="null" ? "":oldPlayerName;
+        var playerName = prompt("Your name: ",oldPlayerName);
         if (!$("#txtRoomId").val() || roomId === NaN || playerName === null) {
             return;
         }
         thisPlayerName = playerName;
+        localStorage.setItem("oldPlayerName", thisPlayerName)
         roomInit(roomId, playerName);
         $("#room").css("display", "unset");
         wordService(startGame)
@@ -314,10 +320,15 @@
 
     function answer(anwer) {
         var playerFirebase = new Firebase('https://vuatiengviet3-default-rtdb.firebaseio.com/rooms/' + thisRoomId + '/' + thisPlayerName);
+        let answeCorrect = localStorage.getItem('correctAnswered_'+thisRoomId);
         if (anwer.toLocaleLowerCase() === currentCorrectWord.toLocaleLowerCase()) {
-            currentScore += (countDownDate - now) / 1000;
-            playerFirebase.set(currentScore);
-            return `<span class="correct-answer">Đúng rồi, ơ mây zing gút chóp ${thisPlayerName}</span>`;
+            if(!answeCorrect){
+                currentScore += (countDownDate - now) / 1000;
+                playerFirebase.set(currentScore);
+                localStorage.setItem('correctAnswered_'+thisRoomId, 1);
+                return `<span class="correct-answer">Đúng rồi, ơ mây zing gút chóp ${thisPlayerName}</span>`;
+            }
+            return `<span class="correct-answer">Đúng rồi, nhưng không cộng điểm nữa đâu, đừng hack nữa ${thisPlayerName}</span>`;
         }
         else {
             return anwer;
@@ -329,7 +340,10 @@
         if ($('#txtTextAnswer').prop("disabled")) {
             return
         }
-        var text = answer($('#txtTextAnswer').val());
+        var text = answer($('#txtTextAnswer').val()).trim();
+        if(!text){
+            return;
+        }
         roomChatFirebase.push({ name: thisPlayerName, text: text })
         $('#txtTextAnswer').val('')
 
