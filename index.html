@@ -27,13 +27,14 @@
     }
 
     #scollDiv {
-        max-height: 400px;
+        max-height: 300px;
         overflow-y: scroll;
     }
 
     .correct-answer {
         font-weight: 1000;
         color: green;
+        font-size: 20px;
     }
 
     .correct-player {
@@ -93,7 +94,7 @@
                                             <i class="glyphicon glyphicon-pencil"></i>
                                         </span>
                                         <input type="text" class="form-control" id="txtTextAnswer"
-                                            placeholder="Câu trả lời here ..">
+                                            style="font-size: 20px;" placeholder="Câu trả lời here ..">
                                         <span class="input-group-btn">
                                             <button class="btn btn-primary" type="submit"
                                                 id="btnAnswerSend">Send</button>
@@ -132,8 +133,8 @@
         var chat = snapshot.val();
         var html =
             '<tr>' +
-            '<td><i class="glyphicon glyphicon-user"></i> ' + chat.name + ': </td>' +
-            '<td>' + chat.text + '</td>' +
+            '<td><i class="glyphicon glyphicon-user"></i> <span style="font-size:20px">' + chat.name + ':</span> </td>' +
+            '<td><span style="font-size:20px">' + chat.text + '</span></td>' +
             '</tr>';
         $('#messageContainer tr:last').after(html);
         $('#scollDiv').animate({
@@ -184,7 +185,7 @@
             }
             $("#listPlayer").html(html)
         }
-        
+
         var removePlayer = function (snapshot) {
             if (snapshot.key() === "data") {
                 return;
@@ -194,8 +195,8 @@
             }
             delete playerList[snapshot.key()];
 
-            $('#player_'+snapshot.key()).remove();
-            if(Object.keys(playerList).length===0){
+            $('#player_' + snapshot.key()).remove();
+            if (Object.keys(playerList).length === 0) {
                 roomDataFirebase.remove()
             }
         }
@@ -232,7 +233,7 @@
         countDownTimer();
         $(".correct-player").removeClass("correct-player");
         correctPlayerList = [];
-        localStorage.removeItem('correctAnswered_'+thisRoomId);
+        localStorage.removeItem('correctAnswered_' + thisRoomId);
         $("#txtTextAnswer").focus();
 
         checkIfHetRound();
@@ -250,8 +251,8 @@
         }
         var roomId = +$("#txtRoomId").val();
         let oldPlayerName = localStorage.getItem("oldPlayerName")
-        oldPlayerName = !oldPlayerName || oldPlayerName==="null" ? "":oldPlayerName;
-        var playerName = prompt("Your name: ",oldPlayerName);
+        oldPlayerName = !oldPlayerName || oldPlayerName === "null" ? "" : oldPlayerName;
+        var playerName = prompt("Your name: ", oldPlayerName);
         if (!$("#txtRoomId").val() || roomId === NaN || playerName === null) {
             return;
         }
@@ -259,7 +260,11 @@
         localStorage.setItem("oldPlayerName", thisPlayerName)
         roomInit(roomId, playerName);
         $("#room").css("display", "unset");
-        wordService(startGame)
+        wordService(startGame);
+
+        $('#scollDiv').animate({
+            scrollTop: $('#scollDiv')[0].scrollHeight
+        }, 0);
     }
     const shuffle = v => [...v].sort(_ => Math.random() - .5).join('');
     function startGame(snapshot) {
@@ -289,10 +294,10 @@
             currentCorrectWord: listWord[randomWordIndex],
         }));
         checkIfHetRound();
-        
+
     }
 
-    function checkIfHetRound(){
+    function checkIfHetRound() {
         if (roundMax <= currentRound) {
             $('#btnNextWord').prop("disabled", true);
             $('#btnNextWord').text("Hết round!");
@@ -320,12 +325,12 @@
 
     function answer(anwer) {
         var playerFirebase = new Firebase('https://vuatiengviet3-default-rtdb.firebaseio.com/rooms/' + thisRoomId + '/' + thisPlayerName);
-        let answeCorrect = localStorage.getItem('correctAnswered_'+thisRoomId);
-        if (anwer.toLocaleLowerCase() === currentCorrectWord.toLocaleLowerCase()) {
-            if(!answeCorrect){
+        let answeCorrect = localStorage.getItem('correctAnswered_' + thisRoomId);
+        if (currentCorrectWord && anwer.toLowerCase() === currentCorrectWord.toLowerCase()) {
+            if (!answeCorrect) {
                 currentScore += (countDownDate - now) / 1000;
                 playerFirebase.set(currentScore);
-                localStorage.setItem('correctAnswered_'+thisRoomId, 1);
+                localStorage.setItem('correctAnswered_' + thisRoomId, 1);
                 return `<span class="correct-answer">Đúng rồi, ơ mây zing gút chóp ${thisPlayerName}</span>`;
             }
             return `<span class="correct-answer">Đúng rồi, nhưng không cộng điểm nữa đâu, đừng hack nữa ${thisPlayerName}</span>`;
@@ -341,7 +346,7 @@
             return
         }
         var text = answer($('#txtTextAnswer').val()).trim();
-        if(!text){
+        if (!text) {
             return;
         }
         roomChatFirebase.push({ name: thisPlayerName, text: text })
