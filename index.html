@@ -22,8 +22,8 @@
 
     .question-background {
         background-image: linear-gradient(to right, #ff000047, #ffa5004a, #ffff0059);
-        border-top: 10px dashed #ff6550;
-        border-bottom: 10px dashed #ff6550;
+        /* border-top: 10px dashed #ff6550;
+        border-bottom: 10px dashed #ff6550; */
     }
 
     #scollDiv {
@@ -57,7 +57,7 @@
         <button onclick="onJoinRoom()">Join</button>
         <div class="row" id="room" style="display:none">
             <div class="col-md-3">
-                <ul id="listPlayer">
+                <ul id="listPlayer" style="list-style: none;">
                 </ul>
             </div>
             <div class="col-md-9">
@@ -70,22 +70,13 @@
                     <div class="col-md-12">
                         <div class="panel panel-primary">
                             <div class="panel-heading">
-                                <i class="glyphicon glyphicon-user"></i>
+                                <i class="glyphicon glyphicon-fire"></i>
                                 <h6 class="panel-title">Round <span id="round"></span>
                                     <h4 id="countdown" class="countdown"></span>
                                 </h6>
                                 <button class="btn btn-warning pull-right" style="margin-top: -40px;" id="btnNextWord"
                                     onclick="onNextWord()">Next word</button>
 
-                            </div>
-                            <div class="panel-body">
-                                <div class="row">
-                                    <div class="col-sm-12" id="scollDiv">
-                                        <table class="table table-hover" id="messageContainer">
-                                            <tr></tr>
-                                        </table>
-                                    </div>
-                                </div>
                             </div>
                             <div class="panel-footer">
                                 <form>
@@ -101,6 +92,15 @@
                                         </span>
                                     </div>
                                 </form>
+                            </div>
+                            <div class="panel-body">
+                                <div class="row">
+                                    <div class="col-sm-12" id="scollDiv">
+                                        <table class="table table-hover" id="messageContainer">
+                                            <tr></tr>
+                                        </table>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -136,9 +136,9 @@
             '<td><i class="glyphicon glyphicon-user"></i> <span style="font-size:20px">' + chat.name + ':</span> </td>' +
             '<td><span style="font-size:20px">' + chat.text + '</span></td>' +
             '</tr>';
-        $('#messageContainer tr:last').after(html);
+        $('#messageContainer tr:first').before(html);
         $('#scollDiv').animate({
-            scrollTop: $('#scollDiv')[0].scrollHeight
+            scrollTop: 0
         }, 0);
     });
 
@@ -181,7 +181,7 @@
                     correctClass = 'class = "correct-player"';
                 }
 
-                html += `<li id="player_${player[0]}"><h3 style="padding:10%;border-radius: 10px;" ${correctClass}>${player[0]}: ${Math.round(+player[1])} <span class="status"></span></h3></li>`;
+                html += `<li id="player_${player[0]}"><h3 style="padding:10%;border-radius: 10px;" ${correctClass}><i class="glyphicon glyphicon-user" style="margin-right: 10px;"></i> ${player[0]}: ${Math.round(+player[1])} <span class="status"></span></h3></li>`;
             }
             $("#listPlayer").html(html)
         }
@@ -229,7 +229,7 @@
         currentWord = dataRoom.currentWord;
         currentCorrectWord = dataRoom.currentCorrectWord;
         $("#questionHolder").text(currentWord);
-        $("#round").text(currentRound);
+        $("#round").text(currentRound > roundMax ? roundMax : currentRound);
         countDownTimer();
         $(".correct-player").removeClass("correct-player");
         correctPlayerList = [];
@@ -263,7 +263,7 @@
         wordService(startGame);
 
         $('#scollDiv').animate({
-            scrollTop: $('#scollDiv')[0].scrollHeight
+            scrollTop: 0
         }, 0);
     }
     const shuffle = v => [...v].sort(_ => Math.random() - .5).join('');
@@ -293,17 +293,19 @@
             currentRound,
             currentCorrectWord: listWord[randomWordIndex],
         }));
+        $('#txtTextAnswer').val('');
+        $('#txtTextAnswer').focus();
         checkIfHetRound();
 
     }
 
     function checkIfHetRound() {
-        if (roundMax <= currentRound) {
+        if (roundMax < currentRound) {
             $('#btnNextWord').prop("disabled", true);
             $('#btnNextWord').text("End round!");
             $('#txtTextAnswer').prop("disabled");
             clearInterval(x);
-            document.getElementById("countdown").innerHTML = "EXPIRED";
+            document.getElementById("countdown").innerHTML = "TIME UP!";
             $("#txtTextAnswer").prop("disabled", true)
             $("#questionHolder").text(currentCorrectWord);
         }
